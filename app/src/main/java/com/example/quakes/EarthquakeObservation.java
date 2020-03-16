@@ -2,6 +2,8 @@ package com.example.quakes;
 
 import androidx.annotation.NonNull;
 
+import java.time.LocalDate;
+
 public class EarthquakeObservation
 {
     // fields
@@ -9,13 +11,15 @@ public class EarthquakeObservation
     private double distance;
     private double magnitude;
     private int resMagnitude;
+    private LocalDate date;
 
     // constructor
-    public EarthquakeObservation(String city, double distance, double magnitude, int resMagnitude)
+    public EarthquakeObservation(String city, double distance, double magnitude, LocalDate date, int resMagnitude)
     {
         this.city = city;
         this.distance = distance;
         this.magnitude = magnitude;
+        this.date = date;
         this.resMagnitude = resMagnitude;
     }
 
@@ -43,6 +47,11 @@ public class EarthquakeObservation
     public int getResMagnitude()
     {
         return resMagnitude;
+    }
+
+    public LocalDate getDate()
+    {
+        return date;
     }
 
     // override toString()
