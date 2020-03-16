@@ -3,24 +3,21 @@ package com.example.quakes;
 import androidx.annotation.NonNull;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 public class EarthquakeObservation
 {
     // fields
-    private String city;
-    private double distance;
+    private String place;
     private double magnitude;
-    private int resMagnitude;
-    private LocalDate date;
+    private LocalDateTime date;
 
     // constructor
-    public EarthquakeObservation(String city, double distance, double magnitude, LocalDate date, int resMagnitude)
+    public EarthquakeObservation(String place, double magnitude, LocalDateTime date)
     {
-        this.city = city;
-        this.distance = distance;
+        this.place = place;
         this.magnitude = magnitude;
         this.date = date;
-        this.resMagnitude = resMagnitude;
     }
 
     public EarthquakeObservation()
@@ -29,14 +26,9 @@ public class EarthquakeObservation
     }
 
     // getters
-    public String getCity()
+    public String getPlace()
     {
-        return city;
-    }
-
-    public double getDistance()
-    {
-        return distance;
+        return place;
     }
 
     public double getMagnitude()
@@ -44,12 +36,7 @@ public class EarthquakeObservation
         return magnitude;
     }
 
-    public int getResMagnitude()
-    {
-        return resMagnitude;
-    }
-
-    public LocalDate getDate()
+    public LocalDateTime getDate()
     {
         return date;
     }
@@ -61,7 +48,7 @@ public class EarthquakeObservation
     {
         String info = null;
 
-        info = city + " " + magnitude + " " + distance;
+        info = place + " " + magnitude;
 
         return info;
     }

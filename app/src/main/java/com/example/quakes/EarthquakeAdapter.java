@@ -10,7 +10,11 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import java.text.DecimalFormat;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Locale;
 
 public class EarthquakeAdapter extends RecyclerView.Adapter<EarthquakeAdapter.EarthquakeViewHolder>
 {
@@ -18,18 +22,18 @@ public class EarthquakeAdapter extends RecyclerView.Adapter<EarthquakeAdapter.Ea
     public static class EarthquakeViewHolder extends RecyclerView.ViewHolder
     {
         // fields
-        public ImageView magnitude;
-        public TextView city;
-        public TextView distance;
+        public TextView magnitude;
+        public TextView place;
+        public TextView country;
         public TextView date;
 
         // constructor
         public EarthquakeViewHolder(@NonNull View itemView)
         {
             super(itemView);
-            city = itemView.findViewById(R.id.city_textView);
-            magnitude = itemView.findViewById(R.id.magnitude_ImageView);
-            distance = itemView.findViewById(R.id.distance_TextView);
+            place = itemView.findViewById(R.id.place_TextView);
+            magnitude = itemView.findViewById(R.id.magnitude_TextView);
+            country = itemView.findViewById(R.id.country_textView);
             date = itemView.findViewById(R.id.date_TextView);
         }
     }
@@ -71,17 +75,46 @@ public class EarthquakeAdapter extends RecyclerView.Adapter<EarthquakeAdapter.Ea
         // get the data model based on position
         EarthquakeObservation obs = mQuakes.get(position);
 
+        String abovePlaceString;
+        String placeString;
+
+        if (obs.getPlace().split(" of ").length > 1)
+        {
+            placeString = obs.getPlace().split(" of ")[1].trim();
+            abovePlaceString = obs.getPlace().split(" of ")[0].trim() + " of";
+        }
+        else
+        {
+            abovePlaceString = "Near";
+            placeString = obs.getPlace();
+        }
+
         // set item views based on your views and data model
-        ImageView magnitude = holder.magnitude;
-        magnitude.setImageResource(obs.getResMagnitude());
+        TextView magnitude = holder.magnitude;
+        magnitude.setText(new DecimalFormat(".0").format(obs.getMagnitude()));
 
-        TextView city = holder.city;
-        city.setText(obs.getCity());
+        if (obs.getMagnitude() < 2) magnitude.setBackgroundResource(R.drawable.circle1_02);
+        else if (obs.getMagnitude() < 3) magnitude.setBackgroundResource(R.drawable.circle2_23);
+        else if (obs.getMagnitude() < 4) magnitude.setBackgroundResource(R.drawable.circle3_34);
+        else if (obs.getMagnitude() < 5) magnitude.setBackgroundResource(R.drawable.circle4_45);
+        else if (obs.getMagnitude() < 6) magnitude.setBackgroundResource(R.drawable.circle5_56);
+        else if (obs.getMagnitude() < 7) magnitude.setBackgroundResource(R.drawable.circle6_67);
+        else if (obs.getMagnitude() < 8) magnitude.setBackgroundResource(R.drawable.circle7_78);
+        else if (obs.getMagnitude() < 9) magnitude.setBackgroundResource(R.drawable.circle8_89);
+        else if (obs.getMagnitude() < 10) magnitude.setBackgroundResource(R.drawable.circle9_910);
+        else magnitude.setBackgroundResource(R.drawable.circle10_10plus);
 
-        TextView distance = holder.distance;
-        distance.setText(String.valueOf(obs.getDistance()));
+        TextView place_TV = holder.place;
+        place_TV.setText(abovePlaceString);
 
+        TextView country_TV = holder.country;
+        country_TV.setText(placeString);
+
+        // date
+        LocalDateTime dateObj = obs.getDate();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd MMM yyyy\nhh:mm");
+        String dateString = dateObj.format(formatter);
         TextView date = holder.date;
-        date.setText(obs.getDate().toString());
+        date.setText(dateString);
     }
 }
