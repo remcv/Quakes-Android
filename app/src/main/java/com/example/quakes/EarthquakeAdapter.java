@@ -135,7 +135,7 @@ public class EarthquakeAdapter extends RecyclerView.Adapter<EarthquakeAdapter.Ea
 
         // date
         LocalDateTime dateObj = obs.getDate();
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd MMM yyyy\nhh:mm");
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd MMM yyyy\nHH:mm");
         String dateString = dateObj.format(formatter);
         TextView date = holder.date;
         date.setText(dateString);

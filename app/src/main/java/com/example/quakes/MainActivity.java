@@ -10,25 +10,19 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
-import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.time.Instant;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity
 {
     // member variables
-    private final static String stringURL = "https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&starttime=2020-04-01&endtime=2020-04-07&minmagnitude=0.8&orderby=time&limit=25";
     private List<EarthquakeObservation> earthquakes = new ArrayList<>();
     private RecyclerView rv;
     private ProgressBar progressBar;
@@ -56,7 +50,10 @@ public class MainActivity extends AppCompatActivity
 
         // connection manager
         conMan = (ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE);
-        netInfo = conMan.getActiveNetworkInfo();
+        if (conMan != null)
+        {
+            netInfo = conMan.getActiveNetworkInfo();
+        }
     }
 
     @Override
@@ -66,18 +63,16 @@ public class MainActivity extends AppCompatActivity
 
         if (netInfo != null && netInfo.isConnected())
         {
-            new Thread(new Runnable()
-            {
+            new Thread(new Runnable() {
                 @Override
                 public void run()
                 {
-                    JSONObject obj = NetFun.urlToJson(stringURL);
+                    JSONObject obj = NetFun.urlToJson(makeStartupString(3,4.5, 30));
                     earthquakes = NetFun.jsonToList(obj);
 
                     if (earthquakes != null)
                     {
-                        runOnUiThread(new Runnable()
-                        {
+                        runOnUiThread(new Runnable() {
                             @Override
                             public void run()
                             {
@@ -104,8 +99,7 @@ public class MainActivity extends AppCompatActivity
         EarthquakeAdapter adapter = new EarthquakeAdapter(earthquakes);
         rv.setAdapter(adapter);
 
-        adapter.setOnItemClickListener(new EarthquakeAdapter.OnItemClickListener()
-        {
+        adapter.setOnItemClickListener(new EarthquakeAdapter.OnItemClickListener() {
             @Override
             public void onItemClick(int position)
             {
@@ -150,6 +144,20 @@ public class MainActivity extends AppCompatActivity
                 break;
         }
 
+    }
+
+    private String makeStartupString(long numberOfDays, double minMagnitude, int resultsLimit)
+    {
+        String startDate;
+        String endDate;
+
+        LocalDate today = LocalDate.now();
+
+        startDate = today.minusDays(numberOfDays).toString();
+        endDate = today.toString();
+
+        return String.format("https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&starttime=%s&endtime=%s&minmagnitude=%f&orderby=time&limit=%d",
+                startDate, endDate, minMagnitude, resultsLimit);
     }
 
 }
