@@ -18,6 +18,12 @@ import java.util.Locale;
 
 public class EarthquakeAdapter extends RecyclerView.Adapter<EarthquakeAdapter.EarthquakeViewHolder>
 {
+    // interface for clicking an item
+    public interface OnItemClickListener
+    {
+        void onItemClick(int position);
+    }
+
     // ViewHolder class
     public static class EarthquakeViewHolder extends RecyclerView.ViewHolder
     {
@@ -28,18 +34,35 @@ public class EarthquakeAdapter extends RecyclerView.Adapter<EarthquakeAdapter.Ea
         public TextView date;
 
         // constructor
-        public EarthquakeViewHolder(@NonNull View itemView)
+        public EarthquakeViewHolder(@NonNull View itemView, final OnItemClickListener listener)
         {
             super(itemView);
             place = itemView.findViewById(R.id.place_TextView);
             magnitude = itemView.findViewById(R.id.magnitude_TextView);
             country = itemView.findViewById(R.id.country_textView);
             date = itemView.findViewById(R.id.date_TextView);
+
+            itemView.setOnClickListener(new View.OnClickListener()
+            {
+                @Override
+                public void onClick(View v)
+                {
+                    if (listener != null)
+                    {
+                        int position = getAdapterPosition();
+                        if (position != RecyclerView.NO_POSITION)
+                        {
+                            listener.onItemClick(position);
+                        }
+                    }
+                }
+            });
         }
     }
 
     // member variables
     private List<EarthquakeObservation> mQuakes;
+    private OnItemClickListener mListener;
 
     // constructor for adapter
     public EarthquakeAdapter(List<EarthquakeObservation> quakes)
@@ -65,7 +88,7 @@ public class EarthquakeAdapter extends RecyclerView.Adapter<EarthquakeAdapter.Ea
         View quakeView = inflater.inflate(R.layout.list_item_layout, parent, false);
 
         // return a new holder instance
-        EarthquakeViewHolder vh = new EarthquakeViewHolder(quakeView);
+        EarthquakeViewHolder vh = new EarthquakeViewHolder(quakeView, mListener);
         return vh;
     }
 
@@ -116,5 +139,11 @@ public class EarthquakeAdapter extends RecyclerView.Adapter<EarthquakeAdapter.Ea
         String dateString = dateObj.format(formatter);
         TextView date = holder.date;
         date.setText(dateString);
+    }
+
+    // method to set the custom OnItemClickListener
+    public void setOnItemClickListener(OnItemClickListener listener)
+    {
+        mListener = listener;
     }
 }

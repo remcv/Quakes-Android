@@ -5,8 +5,15 @@ import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.content.Intent;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
+import android.widget.ProgressBar;
+import android.widget.TextView;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -20,6 +27,14 @@ import java.util.List;
 
 public class MainActivity extends AppCompatActivity
 {
+    // member variables
+    private final static String stringURL = "https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&starttime=2020-04-01&endtime=2020-04-07&minmagnitude=0.8&orderby=time&limit=25";
+    private List<EarthquakeObservation> earthquakes = new ArrayList<>();
+    private RecyclerView rv;
+    private ProgressBar progressBar;
+    private TextView progressText;
+    private ConnectivityManager conMan;
+    NetworkInfo netInfo;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -27,68 +42,114 @@ public class MainActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // dummy data
-        List<EarthquakeObservation> earthquakes = new ArrayList<>();
-        String stringData = "{\"type\":\"FeatureCollection\",\"metadata\":{\"generated\":1584391137000,\"url\":\"https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&starttime=2020-03-14&endtime=2020-03-15&minmagnitude=2.8&orderby=time\",\"title\":\"USGS Earthquakes\",\"status\":200,\"api\":\"1.8.1\",\"count\":25},\"features\":[{\"type\":\"Feature\",\"properties\":{\"mag\":4.5999999999999996,\"place\":\"Fiji region\",\"time\":1584227715891,\"updated\":1584258866583,\"tz\":null,\"url\":\"https://earthquake.usgs.gov/earthquakes/eventpage/us60008ftd\",\"detail\":\"https://earthquake.usgs.gov/fdsnws/event/1/query?eventid=us60008ftd&format=geojson\",\"felt\":null,\"cdi\":null,\"mmi\":null,\"alert\":null,\"status\":\"reviewed\",\"tsunami\":0,\"sig\":0,\"net\":\"us\",\"code\":\"60008ftd\",\"ids\":null,\"sources\":null,\"types\":null,\"nst\":null,\"dmin\":3.6150000000000002,\"rms\":0.54000000000000004,\"gap\":75,\"magType\":\"mb\",\"type\":\"earthquake\",\"title\":\"M 4.6 - Fiji region\"},\"geometry\":{\"type\":\"Point\",\"coordinates\":[-178.16999999999999,-18.127199999999998,617.35000000000002]},\"id\":\"us60008ftd\"},\n" +
-                "{\"type\":\"Feature\",\"properties\":{\"mag\":3.2599999999999998,\"place\":\"Northern California\",\"time\":1584224938930,\"updated\":1584331190502,\"tz\":null,\"url\":\"https://earthquake.usgs.gov/earthquakes/eventpage/nc73354100\",\"detail\":\"https://earthquake.usgs.gov/fdsnws/event/1/query?eventid=nc73354100&format=geojson\",\"felt\":null,\"cdi\":null,\"mmi\":null,\"alert\":null,\"status\":\"automatic\",\"tsunami\":0,\"sig\":0,\"net\":\"nc\",\"code\":\"73354100\",\"ids\":null,\"sources\":null,\"types\":null,\"nst\":21,\"dmin\":null,\"rms\":0.11,\"gap\":78,\"magType\":\"ml\",\"type\":\"earthquake\",\"title\":\"M 3.3 - Northern California\"},\"geometry\":{\"type\":\"Point\",\"coordinates\":[-123.44300079999999,39.638999900000002,7.96]},\"id\":\"nc73354100\"},\n" +
-                "{\"type\":\"Feature\",\"properties\":{\"mag\":2.8199999999999998,\"place\":\"Puerto Rico region\",\"time\":1584220138250,\"updated\":1584226664716,\"tz\":null,\"url\":\"https://earthquake.usgs.gov/earthquakes/eventpage/pr2020074034\",\"detail\":\"https://earthquake.usgs.gov/fdsnws/event/1/query?eventid=pr2020074034&format=geojson\",\"felt\":null,\"cdi\":null,\"mmi\":null,\"alert\":null,\"status\":\"reviewed\",\"tsunami\":0,\"sig\":0,\"net\":\"pr\",\"code\":\"2020074034\",\"ids\":null,\"sources\":null,\"types\":null,\"nst\":6,\"dmin\":0.14299999999999999,\"rms\":0.070000000000000007,\"gap\":252,\"magType\":\"md\",\"type\":\"earthquake\",\"title\":\"M 2.8 - Puerto Rico region\"},\"geometry\":{\"type\":\"Point\",\"coordinates\":[-66.794300000000007,17.859999999999999,5]},\"id\":\"pr2020074034\"},\n" +
-                "{\"type\":\"Feature\",\"properties\":{\"mag\":2.7999999999999998,\"place\":\"Puerto Rico region\",\"time\":1584218800764,\"updated\":1584220930343,\"tz\":null,\"url\":\"https://earthquake.usgs.gov/earthquakes/eventpage/us60008frl\",\"detail\":\"https://earthquake.usgs.gov/fdsnws/event/1/query?eventid=us60008frl&format=geojson\",\"felt\":null,\"cdi\":null,\"mmi\":null,\"alert\":null,\"status\":\"reviewed\",\"tsunami\":0,\"sig\":0,\"net\":\"us\",\"code\":\"60008frl\",\"ids\":null,\"sources\":null,\"types\":null,\"nst\":null,\"dmin\":0.23999999999999999,\"rms\":0.57999999999999996,\"gap\":219,\"magType\":\"ml\",\"type\":\"earthquake\",\"title\":\"M 2.8 - Puerto Rico region\"},\"geometry\":{\"type\":\"Point\",\"coordinates\":[-66.874499999999998,17.789999999999999,10]},\"id\":\"us60008frl\"},\n" +
-                "{\"type\":\"Feature\",\"properties\":{\"mag\":5,\"place\":\"southeast of the Loyalty Islands\",\"time\":1584217668297,\"updated\":1584220630040,\"tz\":null,\"url\":\"https://earthquake.usgs.gov/earthquakes/eventpage/us60008frj\",\"detail\":\"https://earthquake.usgs.gov/fdsnws/event/1/query?eventid=us60008frj&format=geojson\",\"felt\":null,\"cdi\":null,\"mmi\":null,\"alert\":null,\"status\":\"reviewed\",\"tsunami\":0,\"sig\":0,\"net\":\"us\",\"code\":\"60008frj\",\"ids\":null,\"sources\":null,\"types\":null,\"nst\":null,\"dmin\":5.0670000000000002,\"rms\":0.95999999999999996,\"gap\":109,\"magType\":\"mb\",\"type\":\"earthquake\",\"title\":\"M 5.0 - southeast of the Loyalty Islands\"},\"geometry\":{\"type\":\"Point\",\"coordinates\":[173.37200000000001,-22.540700000000001,10]},\"id\":\"us60008frj\"},\n" +
-                "{\"type\":\"Feature\",\"properties\":{\"mag\":4.4000000000000004,\"place\":\"off the west coast of northern Sumatra\",\"time\":1584210633911,\"updated\":1584218180040,\"tz\":null,\"url\":\"https://earthquake.usgs.gov/earthquakes/eventpage/us60008fqs\",\"detail\":\"https://earthquake.usgs.gov/fdsnws/event/1/query?eventid=us60008fqs&format=geojson\",\"felt\":null,\"cdi\":null,\"mmi\":null,\"alert\":null,\"status\":\"reviewed\",\"tsunami\":0,\"sig\":0,\"net\":\"us\",\"code\":\"60008fqs\",\"ids\":null,\"sources\":null,\"types\":null,\"nst\":null,\"dmin\":2.875,\"rms\":0.63,\"gap\":118,\"magType\":\"mb\",\"type\":\"earthquake\",\"title\":\"M 4.4 - off the west coast of northern Sumatra\"},\"geometry\":{\"type\":\"Point\",\"coordinates\":[94.580299999999994,3.5745,10]},\"id\":\"us60008fqs\"},\n" +
-                "{\"type\":\"Feature\",\"properties\":{\"mag\":4.7000000000000002,\"place\":\"northern Mid-Atlantic Ridge\",\"time\":1584200567602,\"updated\":1584206135040,\"tz\":null,\"url\":\"https://earthquake.usgs.gov/earthquakes/eventpage/us60008fpd\",\"detail\":\"https://earthquake.usgs.gov/fdsnws/event/1/query?eventid=us60008fpd&format=geojson\",\"felt\":null,\"cdi\":null,\"mmi\":null,\"alert\":null,\"status\":\"reviewed\",\"tsunami\":0,\"sig\":0,\"net\":\"us\",\"code\":\"60008fpd\",\"ids\":null,\"sources\":null,\"types\":null,\"nst\":null,\"dmin\":22.268999999999998,\"rms\":0.63,\"gap\":138,\"magType\":\"mb\",\"type\":\"earthquake\",\"title\":\"M 4.7 - northern Mid-Atlantic Ridge\"},\"geometry\":{\"type\":\"Point\",\"coordinates\":[-45.817700000000002,21.1676,10]},\"id\":\"us60008fpd\"},\n" +
-                "{\"type\":\"Feature\",\"properties\":{\"mag\":3.0499999999999998,\"place\":\"Mona Passage, Puerto Rico\",\"time\":1584183531540,\"updated\":1584190761100,\"tz\":null,\"url\":\"https://earthquake.usgs.gov/earthquakes/eventpage/pr2020074021\",\"detail\":\"https://earthquake.usgs.gov/fdsnws/event/1/query?eventid=pr2020074021&format=geojson\",\"felt\":null,\"cdi\":null,\"mmi\":null,\"alert\":null,\"status\":\"reviewed\",\"tsunami\":0,\"sig\":0,\"net\":\"pr\",\"code\":\"2020074021\",\"ids\":null,\"sources\":null,\"types\":null,\"nst\":9,\"dmin\":0.094299999999999995,\"rms\":0.040000000000000001,\"gap\":223,\"magType\":\"md\",\"type\":\"earthquake\",\"title\":\"M 3.1 - Mona Passage, Puerto Rico\"},\"geometry\":{\"type\":\"Point\",\"coordinates\":[-67.385300000000001,18.393799999999999,19]},\"id\":\"pr2020074021\"},\n" +
-                "{\"type\":\"Feature\",\"properties\":{\"mag\":5,\"place\":\"Philippine Islands region\",\"time\":1584183061152,\"updated\":1584184251040,\"tz\":null,\"url\":\"https://earthquake.usgs.gov/earthquakes/eventpage/us60008fm9\",\"detail\":\"https://earthquake.usgs.gov/fdsnws/event/1/query?eventid=us60008fm9&format=geojson\",\"felt\":null,\"cdi\":null,\"mmi\":null,\"alert\":null,\"status\":\"reviewed\",\"tsunami\":0,\"sig\":0,\"net\":\"us\",\"code\":\"60008fm9\",\"ids\":null,\"sources\":null,\"types\":null,\"nst\":null,\"dmin\":10.375,\"rms\":0.66000000000000003,\"gap\":111,\"magType\":\"mb\",\"type\":\"earthquake\",\"title\":\"M 5.0 - Philippine Islands region\"},\"geometry\":{\"type\":\"Point\",\"coordinates\":[126.7834,11.5846,10]},\"id\":\"us60008fm9\"},\n" +
-                "{\"type\":\"Feature\",\"properties\":{\"mag\":4.9000000000000004,\"place\":\"Halmahera, Indonesia\",\"time\":1584182560041,\"updated\":1584183637040,\"tz\":null,\"url\":\"https://earthquake.usgs.gov/earthquakes/eventpage/us60008fm8\",\"detail\":\"https://earthquake.usgs.gov/fdsnws/event/1/query?eventid=us60008fm8&format=geojson\",\"felt\":null,\"cdi\":null,\"mmi\":null,\"alert\":null,\"status\":\"reviewed\",\"tsunami\":0,\"sig\":0,\"net\":\"us\",\"code\":\"60008fm8\",\"ids\":null,\"sources\":null,\"types\":null,\"nst\":null,\"dmin\":2.1030000000000002,\"rms\":1.0900000000000001,\"gap\":95,\"magType\":\"mb\",\"type\":\"earthquake\",\"title\":\"M 4.9 - Halmahera, Indonesia\"},\"geometry\":{\"type\":\"Point\",\"coordinates\":[128.2175,2.7081,60.649999999999999]},\"id\":\"us60008fm8\"},\n" +
-                "{\"type\":\"Feature\",\"properties\":{\"mag\":3.3999999999999999,\"place\":\"Puerto Rico region\",\"time\":1584181323770,\"updated\":1584204453572,\"tz\":null,\"url\":\"https://earthquake.usgs.gov/earthquakes/eventpage/pr2020074020\",\"detail\":\"https://earthquake.usgs.gov/fdsnws/event/1/query?eventid=pr2020074020&format=geojson\",\"felt\":null,\"cdi\":null,\"mmi\":null,\"alert\":null,\"status\":\"reviewed\",\"tsunami\":0,\"sig\":0,\"net\":\"pr\",\"code\":\"2020074020\",\"ids\":null,\"sources\":null,\"types\":null,\"nst\":12,\"dmin\":0.70530000000000004,\"rms\":0.25,\"gap\":221,\"magType\":\"md\",\"type\":\"earthquake\",\"title\":\"M 3.4 - Puerto Rico region\"},\"geometry\":{\"type\":\"Point\",\"coordinates\":[-66.825000000000003,19.1175,28]},\"id\":\"pr2020074020\"},\n" +
-                "{\"type\":\"Feature\",\"properties\":{\"mag\":6.2999999999999998,\"place\":\"Kermadec Islands region\",\"time\":1584180077383,\"updated\":1584266633243,\"tz\":null,\"url\":\"https://earthquake.usgs.gov/earthquakes/eventpage/us60008fl8\",\"detail\":\"https://earthquake.usgs.gov/fdsnws/event/1/query?eventid=us60008fl8&format=geojson\",\"felt\":null,\"cdi\":null,\"mmi\":null,\"alert\":null,\"status\":\"reviewed\",\"tsunami\":1,\"sig\":0,\"net\":\"us\",\"code\":\"60008fl8\",\"ids\":null,\"sources\":null,\"types\":null,\"nst\":null,\"dmin\":2.6869999999999998,\"rms\":1.03,\"gap\":22,\"magType\":\"mww\",\"type\":\"earthquake\",\"title\":\"M 6.3 - Kermadec Islands region\"},\"geometry\":{\"type\":\"Point\",\"coordinates\":[-175.68469999999999,-27.419599999999999,10]},\"id\":\"us60008fl8\"},\n" +
-                "{\"type\":\"Feature\",\"properties\":{\"mag\":4.4000000000000004,\"place\":\"Ryukyu Islands, Japan\",\"time\":1584172542672,\"updated\":1584175686040,\"tz\":null,\"url\":\"https://earthquake.usgs.gov/earthquakes/eventpage/us60008fkk\",\"detail\":\"https://earthquake.usgs.gov/fdsnws/event/1/query?eventid=us60008fkk&format=geojson\",\"felt\":null,\"cdi\":null,\"mmi\":null,\"alert\":null,\"status\":\"reviewed\",\"tsunami\":0,\"sig\":0,\"net\":\"us\",\"code\":\"60008fkk\",\"ids\":null,\"sources\":null,\"types\":null,\"nst\":null,\"dmin\":1.0669999999999999,\"rms\":1.1000000000000001,\"gap\":86,\"magType\":\"mb\",\"type\":\"earthquake\",\"title\":\"M 4.4 - Ryukyu Islands, Japan\"},\"geometry\":{\"type\":\"Point\",\"coordinates\":[128.02170000000001,27.884399999999999,10]},\"id\":\"us60008fkk\"},\n" +
-                "{\"type\":\"Feature\",\"properties\":{\"mag\":4.5999999999999996,\"place\":\"Fiji region\",\"time\":1584170371663,\"updated\":1584171939040,\"tz\":null,\"url\":\"https://earthquake.usgs.gov/earthquakes/eventpage/us60008fjw\",\"detail\":\"https://earthquake.usgs.gov/fdsnws/event/1/query?eventid=us60008fjw&format=geojson\",\"felt\":null,\"cdi\":null,\"mmi\":null,\"alert\":null,\"status\":\"reviewed\",\"tsunami\":0,\"sig\":0,\"net\":\"us\",\"code\":\"60008fjw\",\"ids\":null,\"sources\":null,\"types\":null,\"nst\":null,\"dmin\":3.6739999999999999,\"rms\":0.56999999999999995,\"gap\":70,\"magType\":\"mb\",\"type\":\"earthquake\",\"title\":\"M 4.6 - Fiji region\"},\"geometry\":{\"type\":\"Point\",\"coordinates\":[-178.11109999999999,-18.1538,579.33000000000004]},\"id\":\"us60008fjw\"},\n" +
-                "{\"type\":\"Feature\",\"properties\":{\"mag\":2.8100000000000001,\"place\":\"Puerto Rico region\",\"time\":1584168172530,\"updated\":1584171481811,\"tz\":null,\"url\":\"https://earthquake.usgs.gov/earthquakes/eventpage/pr2020074013\",\"detail\":\"https://earthquake.usgs.gov/fdsnws/event/1/query?eventid=pr2020074013&format=geojson\",\"felt\":null,\"cdi\":null,\"mmi\":null,\"alert\":null,\"status\":\"reviewed\",\"tsunami\":0,\"sig\":0,\"net\":\"pr\",\"code\":\"2020074013\",\"ids\":null,\"sources\":null,\"types\":null,\"nst\":6,\"dmin\":0.070900000000000005,\"rms\":0.089999999999999997,\"gap\":228,\"magType\":\"md\",\"type\":\"earthquake\",\"title\":\"M 2.8 - Puerto Rico region\"},\"geometry\":{\"type\":\"Point\",\"coordinates\":[-66.829999999999998,17.923999999999999,14]},\"id\":\"pr2020074013\"},\n" +
-                "{\"type\":\"Feature\",\"properties\":{\"mag\":2.8300000000000001,\"place\":\"Puerto Rico\",\"time\":1584167841900,\"updated\":1584171697284,\"tz\":null,\"url\":\"https://earthquake.usgs.gov/earthquakes/eventpage/pr2020074011\",\"detail\":\"https://earthquake.usgs.gov/fdsnws/event/1/query?eventid=pr2020074011&format=geojson\",\"felt\":null,\"cdi\":null,\"mmi\":null,\"alert\":null,\"status\":\"reviewed\",\"tsunami\":0,\"sig\":0,\"net\":\"pr\",\"code\":\"2020074011\",\"ids\":null,\"sources\":null,\"types\":null,\"nst\":6,\"dmin\":0.067799999999999999,\"rms\":0.050000000000000003,\"gap\":291,\"magType\":\"md\",\"type\":\"earthquake\",\"title\":\"M 2.8 - Puerto Rico\"},\"geometry\":{\"type\":\"Point\",\"coordinates\":[-67.1648,17.967099999999999,11]},\"id\":\"pr2020074011\"},\n" +
-                "{\"type\":\"Feature\",\"properties\":{\"mag\":4.2999999999999998,\"place\":\"Tarapaca, Chile\",\"time\":1584162048976,\"updated\":1584168881040,\"tz\":null,\"url\":\"https://earthquake.usgs.gov/earthquakes/eventpage/us60008fib\",\"detail\":\"https://earthquake.usgs.gov/fdsnws/event/1/query?eventid=us60008fib&format=geojson\",\"felt\":null,\"cdi\":null,\"mmi\":null,\"alert\":null,\"status\":\"reviewed\",\"tsunami\":0,\"sig\":0,\"net\":\"us\",\"code\":\"60008fib\",\"ids\":null,\"sources\":null,\"types\":null,\"nst\":null,\"dmin\":0.32800000000000001,\"rms\":0.81000000000000005,\"gap\":73,\"magType\":\"mb\",\"type\":\"earthquake\",\"title\":\"M 4.3 - Tarapaca, Chile\"},\"geometry\":{\"type\":\"Point\",\"coordinates\":[-69.7667,-18.554200000000002,131.84]},\"id\":\"us60008fib\"},\n" +
-                "{\"type\":\"Feature\",\"properties\":{\"mag\":2.9399999999999999,\"place\":\"Puerto Rico region\",\"time\":1584159937970,\"updated\":1584170794936,\"tz\":null,\"url\":\"https://earthquake.usgs.gov/earthquakes/eventpage/pr2020074010\",\"detail\":\"https://earthquake.usgs.gov/fdsnws/event/1/query?eventid=pr2020074010&format=geojson\",\"felt\":null,\"cdi\":null,\"mmi\":null,\"alert\":null,\"status\":\"reviewed\",\"tsunami\":0,\"sig\":0,\"net\":\"pr\",\"code\":\"2020074010\",\"ids\":null,\"sources\":null,\"types\":null,\"nst\":8,\"dmin\":0.045999999999999999,\"rms\":0.080000000000000002,\"gap\":220,\"magType\":\"md\",\"type\":\"earthquake\",\"title\":\"M 2.9 - Puerto Rico region\"},\"geometry\":{\"type\":\"Point\",\"coordinates\":[-66.907499999999999,17.938800000000001,11]},\"id\":\"pr2020074010\"},\n" +
-                "{\"type\":\"Feature\",\"properties\":{\"mag\":2.8300000000000001,\"place\":\"Puerto Rico region\",\"time\":1584157375970,\"updated\":1584158927238,\"tz\":null,\"url\":\"https://earthquake.usgs.gov/earthquakes/eventpage/pr2020074007\",\"detail\":\"https://earthquake.usgs.gov/fdsnws/event/1/query?eventid=pr2020074007&format=geojson\",\"felt\":null,\"cdi\":null,\"mmi\":null,\"alert\":null,\"status\":\"reviewed\",\"tsunami\":0,\"sig\":0,\"net\":\"pr\",\"code\":\"2020074007\",\"ids\":null,\"sources\":null,\"types\":null,\"nst\":8,\"dmin\":0.1164,\"rms\":0.040000000000000001,\"gap\":244,\"magType\":\"md\",\"type\":\"earthquake\",\"title\":\"M 2.8 - Puerto Rico region\"},\"geometry\":{\"type\":\"Point\",\"coordinates\":[-66.810299999999998,17.8813,7]},\"id\":\"pr2020074007\"},\n" +
-                "{\"type\":\"Feature\",\"properties\":{\"mag\":3.0600000000000001,\"place\":\"Puerto Rico region\",\"time\":1584154994590,\"updated\":1584156925812,\"tz\":null,\"url\":\"https://earthquake.usgs.gov/earthquakes/eventpage/pr2020074006\",\"detail\":\"https://earthquake.usgs.gov/fdsnws/event/1/query?eventid=pr2020074006&format=geojson\",\"felt\":null,\"cdi\":null,\"mmi\":null,\"alert\":null,\"status\":\"reviewed\",\"tsunami\":0,\"sig\":0,\"net\":\"pr\",\"code\":\"2020074006\",\"ids\":null,\"sources\":null,\"types\":null,\"nst\":6,\"dmin\":0.1681,\"rms\":0.040000000000000001,\"gap\":250,\"magType\":\"md\",\"type\":\"earthquake\",\"title\":\"M 3.1 - Puerto Rico region\"},\"geometry\":{\"type\":\"Point\",\"coordinates\":[-66.737099999999998,17.885300000000001,6]},\"id\":\"pr2020074006\"},\n" +
-                "{\"type\":\"Feature\",\"properties\":{\"mag\":3.1400000000000001,\"place\":\"Puerto Rico region\",\"time\":1584152426700,\"updated\":1584156217505,\"tz\":null,\"url\":\"https://earthquake.usgs.gov/earthquakes/eventpage/pr2020074005\",\"detail\":\"https://earthquake.usgs.gov/fdsnws/event/1/query?eventid=pr2020074005&format=geojson\",\"felt\":null,\"cdi\":null,\"mmi\":null,\"alert\":null,\"status\":\"reviewed\",\"tsunami\":0,\"sig\":0,\"net\":\"pr\",\"code\":\"2020074005\",\"ids\":null,\"sources\":null,\"types\":null,\"nst\":8,\"dmin\":0.1323,\"rms\":0.22,\"gap\":208,\"magType\":\"md\",\"type\":\"earthquake\",\"title\":\"M 3.1 - Puerto Rico region\"},\"geometry\":{\"type\":\"Point\",\"coordinates\":[-66.548100000000005,17.923999999999999,12]},\"id\":\"pr2020074005\"},\n" +
-                "{\"type\":\"Feature\",\"properties\":{\"mag\":2.9100000000000001,\"place\":\"Puerto Rico region\",\"time\":1584149692150,\"updated\":1584152207510,\"tz\":null,\"url\":\"https://earthquake.usgs.gov/earthquakes/eventpage/pr2020074004\",\"detail\":\"https://earthquake.usgs.gov/fdsnws/event/1/query?eventid=pr2020074004&format=geojson\",\"felt\":null,\"cdi\":null,\"mmi\":null,\"alert\":null,\"status\":\"reviewed\",\"tsunami\":0,\"sig\":0,\"net\":\"pr\",\"code\":\"2020074004\",\"ids\":null,\"sources\":null,\"types\":null,\"nst\":8,\"dmin\":0.092700000000000005,\"rms\":0.070000000000000007,\"gap\":235,\"magType\":\"md\",\"type\":\"earthquake\",\"title\":\"M 2.9 - Puerto Rico region\"},\"geometry\":{\"type\":\"Point\",\"coordinates\":[-66.944299999999998,17.909099999999999,8]},\"id\":\"pr2020074004\"},\n" +
-                "{\"type\":\"Feature\",\"properties\":{\"mag\":4.2999999999999998,\"place\":\"Jujuy, Argentina\",\"time\":1584149246607,\"updated\":1584150106040,\"tz\":null,\"url\":\"https://earthquake.usgs.gov/earthquakes/eventpage/us60008fgl\",\"detail\":\"https://earthquake.usgs.gov/fdsnws/event/1/query?eventid=us60008fgl&format=geojson\",\"felt\":null,\"cdi\":null,\"mmi\":null,\"alert\":null,\"status\":\"reviewed\",\"tsunami\":0,\"sig\":0,\"net\":\"us\",\"code\":\"60008fgl\",\"ids\":null,\"sources\":null,\"types\":null,\"nst\":null,\"dmin\":1.534,\"rms\":0.76000000000000001,\"gap\":58,\"magType\":\"mb\",\"type\":\"earthquake\",\"title\":\"M 4.3 - Jujuy, Argentina\"},\"geometry\":{\"type\":\"Point\",\"coordinates\":[-66.896500000000003,-23.9407,220.33000000000001]},\"id\":\"us60008fgl\"},\n" +
-                "{\"type\":\"Feature\",\"properties\":{\"mag\":2.8399999999999999,\"place\":\"Puerto Rico region\",\"time\":1584149216410,\"updated\":1584151782063,\"tz\":null,\"url\":\"https://earthquake.usgs.gov/earthquakes/eventpage/pr2020074003\",\"detail\":\"https://earthquake.usgs.gov/fdsnws/event/1/query?eventid=pr2020074003&format=geojson\",\"felt\":null,\"cdi\":null,\"mmi\":null,\"alert\":null,\"status\":\"reviewed\",\"tsunami\":0,\"sig\":0,\"net\":\"pr\",\"code\":\"2020074003\",\"ids\":null,\"sources\":null,\"types\":null,\"nst\":8,\"dmin\":0.042700000000000002,\"rms\":0.089999999999999997,\"gap\":217,\"magType\":\"md\",\"type\":\"earthquake\",\"title\":\"M 2.8 - Puerto Rico region\"},\"geometry\":{\"type\":\"Point\",\"coordinates\":[-66.908500000000004,17.943999999999999,11]},\"id\":\"pr2020074003\"},\n" +
-                "{\"type\":\"Feature\",\"properties\":{\"mag\":3,\"place\":\"western Texas\",\"time\":1584148181224,\"updated\":1584185842265,\"tz\":null,\"url\":\"https://earthquake.usgs.gov/earthquakes/eventpage/us60008fga\",\"detail\":\"https://earthquake.usgs.gov/fdsnws/event/1/query?eventid=us60008fga&format=geojson\",\"felt\":null,\"cdi\":null,\"mmi\":null,\"alert\":null,\"status\":\"reviewed\",\"tsunami\":0,\"sig\":0,\"net\":\"us\",\"code\":\"60008fga\",\"ids\":null,\"sources\":null,\"types\":null,\"nst\":null,\"dmin\":0.02,\"rms\":0.67000000000000004,\"gap\":32,\"magType\":\"mb_lg\",\"type\":\"earthquake\",\"title\":\"M 3.0 - western Texas\"},\"geometry\":{\"type\":\"Point\",\"coordinates\":[-100.9353,32.869,1.24]},\"id\":\"us60008fga\"}],\"bbox\":[-178.17,-27.4196,1.24,173.372,39.6389999,617.35]}";
-        JSONObject root;
-        int count;
+        progressBar = findViewById(R.id.progress_circular);
+        progressText = findViewById(R.id.progress_TextView);
 
-        String place = null;
-        double magnitude;
-        LocalDateTime date;
-
-        try
-        {
-            root = new JSONObject(stringData);
-            count = root.getJSONObject("metadata").getInt("count");
-            Log.d("Quakes", "count = " + count);
-
-            for (int i = 0; i < count; ++i)
-            {
-                place = root.getJSONArray("features").getJSONObject(i).getJSONObject("properties").getString("place");
-                magnitude = root.getJSONArray("features").getJSONObject(i).getJSONObject("properties").getDouble("mag");
-                date = Instant.ofEpochMilli(root.getJSONArray("features").getJSONObject(i).getJSONObject("properties").getLong("time")).atZone(ZoneId.systemDefault()).toLocalDateTime();
-
-                earthquakes.add(new EarthquakeObservation(place, magnitude, date));
-            }
-        }
-        catch (JSONException e)
-        {
-            Log.d("Quakes", "JSONException thrown");
-        }
+        updateStatus(0);
 
         // RecyclerView
-        RecyclerView rv = findViewById(R.id.recyclerView);
+        rv = findViewById(R.id.recyclerView);
         rv.setLayoutManager(new LinearLayoutManager(this));
-
-        EarthquakeAdapter adapter = new EarthquakeAdapter(earthquakes);
-        rv.setAdapter(adapter);
 
         RecyclerView.ItemDecoration itemDecoration = new DividerItemDecoration(this, DividerItemDecoration.VERTICAL);
         rv.addItemDecoration(itemDecoration);
+
+        // connection manager
+        conMan = (ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE);
+        netInfo = conMan.getActiveNetworkInfo();
     }
+
+    @Override
+    protected void onStart()
+    {
+        super.onStart();
+
+        if (netInfo != null && netInfo.isConnected())
+        {
+            new Thread(new Runnable()
+            {
+                @Override
+                public void run()
+                {
+                    JSONObject obj = NetFun.urlToJson(stringURL);
+                    earthquakes = NetFun.jsonToList(obj);
+
+                    if (earthquakes != null)
+                    {
+                        runOnUiThread(new Runnable()
+                        {
+                            @Override
+                            public void run()
+                            {
+                                putDataInAdapter();
+                                updateStatus(1);
+                            }
+                        });
+                    }
+                    else
+                    {
+                        runOnUiThread(() -> updateStatus(3));
+                    }
+                }
+            }).start();
+        }
+        else
+        {
+            updateStatus(2);
+        }
+    }
+
+    private void putDataInAdapter()
+    {
+        EarthquakeAdapter adapter = new EarthquakeAdapter(earthquakes);
+        rv.setAdapter(adapter);
+
+        adapter.setOnItemClickListener(new EarthquakeAdapter.OnItemClickListener()
+        {
+            @Override
+            public void onItemClick(int position)
+            {
+                String url = earthquakes.get(position).getUrl();
+                Uri webPage = Uri.parse(url);
+
+                Intent goToBrowserIntent = new Intent();
+                goToBrowserIntent.setAction(Intent.ACTION_VIEW);
+                goToBrowserIntent.setData(webPage);
+                startActivity(goToBrowserIntent);
+            }
+        });
+    }
+
+    private void updateStatus(int statusCode)
+    {
+        switch (statusCode)
+        {
+            case 0: // startup
+                progressBar.setEnabled(true);
+                progressBar.setVisibility(View.VISIBLE);
+                progressText.setText("Updating");
+                progressText.setVisibility(View.VISIBLE);
+                break;
+            case 1: // on successful data retrieved
+                progressBar.setEnabled(false);
+                progressBar.setVisibility(View.GONE);
+                progressText.setText("Updated");
+                progressText.setVisibility(View.VISIBLE);
+                break;
+            case 2: // not connected to the Internet
+                progressBar.setEnabled(false);
+                progressBar.setVisibility(View.GONE);
+                progressText.setText("No internet connection");
+                progressText.setVisibility(View.VISIBLE);
+                break;
+            default: // internet connection is active, but some networking error occurred
+                progressBar.setEnabled(false);
+                progressBar.setVisibility(View.GONE);
+                progressText.setText("No data retrieved");
+                progressText.setVisibility(View.VISIBLE);
+                break;
+        }
+
+    }
+
 }

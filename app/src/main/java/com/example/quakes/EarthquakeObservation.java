@@ -2,7 +2,6 @@ package com.example.quakes;
 
 import androidx.annotation.NonNull;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 public class EarthquakeObservation
@@ -11,18 +10,15 @@ public class EarthquakeObservation
     private String place;
     private double magnitude;
     private LocalDateTime date;
+    private final String url;
 
     // constructor
-    public EarthquakeObservation(String place, double magnitude, LocalDateTime date)
+    public EarthquakeObservation(String place, double magnitude, LocalDateTime date, String url)
     {
         this.place = place;
         this.magnitude = magnitude;
         this.date = date;
-    }
-
-    public EarthquakeObservation()
-    {
-        // empty
+        this.url = url;
     }
 
     // getters
@@ -39,6 +35,11 @@ public class EarthquakeObservation
     public LocalDateTime getDate()
     {
         return date;
+    }
+
+    public String getUrl()
+    {
+        return url;
     }
 
     // override toString()
