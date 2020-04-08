@@ -67,7 +67,7 @@ public class MainActivity extends AppCompatActivity
                 @Override
                 public void run()
                 {
-                    JSONObject obj = NetFun.urlToJson(makeStartupString(3,4.5, 30));
+                    JSONObject obj = NetFun.urlToJson(makeStartupString(3,2.9, 30));
                     earthquakes = NetFun.jsonToList(obj);
 
                     if (earthquakes != null)

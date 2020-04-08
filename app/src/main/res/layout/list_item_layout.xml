@@ -48,7 +48,8 @@
         android:layout_weight="1"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
-        android:text="22 DEC 2019"
+        android:gravity="center"
+        tools:text="22 DEC 2019\n21:30"
         android:paddingLeft="8dp"
         android:paddingRight="8dp"/>
 
