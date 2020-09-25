@@ -8,4 +8,4 @@ Simple Android app to show recent seismic activity using the [usgs.gov](http://u
 - Android UI, RecyclerView
 
 #### Screenshot
-[App screenshot](screenshots/Screenshot_01.jpg)
+[App screenshot](/screenshots/Screenshot_01.jpg)
